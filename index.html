@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GridCore3D - Ultra-Realistic Modular System</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#0284c7', 600: '#0369a1' },
+                        accent: { 400: '#38bdf8', 500: '#06b6d4' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Three.js & GSAP ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020408;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020408;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
+        }
+        
+        .glass-panel {
+            background: rgba(10, 16, 30, 0.7);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .glow-effect {
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="bg-[#020408] text-gray-100 antialiased selection:bg-cyan-500 selection:text-white">
+
+    <!-- Ambient Glow BG -->
+    <div class="glow-effect"></div>
+
+    <!-- Navigation Header -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-slate-800/80 px-8 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-sky-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                    <i data-lucide="grid" class="w-5 h-5 text-white"></i>
+                </div>
+                <span class="font-black text-2xl tracking-tight text-white">
+                    GridCore<span class="text-cyan-400">3D</span>
+                </span>
+            </div>
+            <div class="hidden sm:flex items-center gap-6 text-sm font-medium text-slate-400">
+                <span class="hover:text-cyan-400 transition-colors cursor-pointer">Features</span>
+                <span class="hover:text-cyan-400 transition-colors cursor-pointer">Module</span>
+                <span class="hover:text-cyan-400 transition-colors cursor-pointer">Technologie</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO HEADER -->
+    <header class="relative pt-36 pb-8 px-6 max-w-7xl mx-auto text-center z-10">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-950/70 border border-cyan-500/40 text-cyan-400 text-xs font-semibold tracking-wider uppercase mb-6 shadow-lg shadow-cyan-500/10">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Photorealistic PBR Rendering
+        </div>
+        <h1 class="text-5xl sm:text-7xl font-black tracking-tight mb-6 leading-tight max-w-5xl mx-auto">
+            Strikte parallele Absenkung.<br>
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-sky-200 to-indigo-400">Perfekter Sitz im Gitter.</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto font-light leading-relaxed mb-4">
+            Hochglänzende Oberflächen, echte Lichtreflexionen und präzise PBR-Materialien für maximale visuelle Perfektion.
+        </p>
+    </header>
+
+    <!-- 3D PINNED ANIMATION SECTION -->
+    <div id="animation-section" class="relative w-full h-[500vh]">
+        <!-- Sticky Canvas Container -->
+        <div class="sticky top-0 left-0 w-full h-screen overflow-hidden flex items-center justify-center">
+            <!-- 3D Canvas -->
+            <div id="webgl-container" class="w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing"></div>
+            
+            <!-- Floating Status Badge -->
+            <div id="status-badge" class="absolute bottom-12 left-1/2 -translate-x-1/2 glass-panel px-8 py-4 rounded-2xl text-sm font-semibold text-slate-200 shadow-2xl pointer-events-none transition-all duration-300 flex items-center gap-4 border border-slate-700/80">
+                <span id="status-dot" class="w-3 h-3 rounded-full bg-slate-500"></span>
+                <span id="status-text" class="tracking-wide">Das Gitter ist noch komplett frei...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRODUKTBESCHREIBUNG -->
+    <section id="description" class="relative z-20 bg-[#020408] py-32 px-6 border-t border-slate-800/80">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center max-w-3xl mx-auto mb-20">
+                <h2 class="text-4xl sm:text-6xl font-black tracking-tight mb-6 text-white">
+                    Perfekte Anordnung – Ohne Rutschen
+                </h2>
+                <p class="text-slate-400 text-lg sm:text-xl leading-relaxed">
+                    Glanzvoll verarbeitete Module mit echter Oberflächenspiegelung und präzisen Passformen.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-panel p-10 rounded-3xl hover:border-cyan-500/60 transition-all duration-500 hover:-translate-y-2 group">
+                    <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="grid" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Spiegelnde Oberflächen</h3>
+                    <p class="text-slate-400 text-base leading-relaxed font-light">
+                        Hochglanz-Lackierung und metallische Reflektionen verleihen den Modulen ein extrem hochwertiges Aussehen.
+                    </p>
+                </div>
+
+                <div class="glass-panel p-10 rounded-3xl hover:border-cyan-500/60 transition-all duration-500 hover:-translate-y-2 group">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="columns" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Abwechslungsreich</h3>
+                    <p class="text-slate-400 text-base leading-relaxed font-light">
+                        Verschiedene Fächergrößen mit spiegelnden Innenwänden und glänzenden Sockelfräsungen.
+                    </p>
+                </div>
+
+                <div class="glass-panel p-10 rounded-3xl hover:border-cyan-500/60 transition-all duration-500 hover:-translate-y-2 group">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                        <i data-lucide="check-circle-2" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Lückenlose Nutzung</h3>
+                    <p class="text-slate-400 text-base leading-relaxed font-light">
+                        Durch die Kombination aus verschiedenen Boxgrößen wird das gesamte Raster ohne ungenutzte Ränder ausgefüllt.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#010204] py-10 border-t border-slate-900 text-center text-xs text-slate-500 font-medium tracking-wider">
+        <p>© <span id="year"></span> GRIDCORE3D SYSTEM. ALLE RECHTE VORBEHALTEN.</p>
+    </footer>
+
+    <!-- Three.js Ultra-Realistic Visualizer Script -->
+    <script>
+        lucide.createIcons();
+        document.getElementById('year').innerText = new Date().getFullYear();
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        const container = document.getElementById('webgl-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020408, 0.02);
+
+        // PERSPECTIVE CAMERA
+        const camera = new THREE.PerspectiveCamera(34, window.innerWidth / window.innerHeight, 0.1, 100);
+        const baseCamPos = { x: 0, y: 13.0, z: 14.0 };
+        camera.position.set(baseCamPos.x, baseCamPos.y, baseCamPos.z);
+        camera.lookAt(0, -0.4, 0);
+
+        // WEBGL RENDERER WITH HIGH-END PBR & SHADOWS
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.35;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        container.appendChild(renderer.domElement);
+
+        // --- REALISTIC ENVIRONMENT REFLECTION MAP (PROCEDURAL HDR ENVIRONMENT) ---
+        function generateCubeEnvMap() {
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            pmremGenerator.compileEquirectangularShader();
+
+            const envScene = new THREE.Scene();
+            envScene.background = new THREE.Color(0x0a0f1d);
+
+            // Light sources in env space for highlights & gloss reflections
+            const light1 = new THREE.Mesh(
+                new THREE.SphereGeometry(4, 32, 32),
+                new THREE.MeshBasicMaterial({ color: 0xffffff })
+            );
+            light1.position.set(10, 15, 10);
+            envScene.add(light1);
+
+            const light2 = new THREE.Mesh(
+                new THREE.SphereGeometry(6, 32, 32),
+                new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+            );
+            light2.position.set(-15, 12, -10);
+            envScene.add(light2);
+
+            const light3 = new THREE.Mesh(
+                new THREE.SphereGeometry(3, 32, 32),
+                new THREE.MeshBasicMaterial({ color: 0x818cf8 })
+            );
+            light3.position.set(0, 10, -15);
+            envScene.add(light3);
+
+            const renderTarget = pmremGenerator.fromScene(envScene);
+            pmremGenerator.dispose();
+            return renderTarget.texture;
+        }
+
+        const envMapTexture = generateCubeEnvMap();
+        scene.environment = envMapTexture;
+
+        // --- STUDIO LIGHTING SETUP ---
+        scene.add(new THREE.AmbientLight(0x94a3b8, 0.45));
+
+        // High Intensity Key Light for Specular Highlights
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+        keyLight.position.set(10, 20, 9);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.width = 4096;
+        keyLight.shadow.mapSize.height = 4096;
+        keyLight.shadow.camera.near = 0.5;
+        keyLight.shadow.camera.far = 40;
+        const d = 10;
+        keyLight.shadow.camera.left = -d;
+        keyLight.shadow.camera.right = d;
+        keyLight.shadow.camera.top = d;
+        keyLight.shadow.camera.bottom = -d;
+        keyLight.shadow.bias = -0.0001;
+        keyLight.shadow.radius = 2.5;
+        scene.add(keyLight);
+
+        // Sharp Cyan Specular Rim Light
+        const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.8);
+        rimLight.position.set(-15, 10, -12);
+        scene.add(rimLight);
+
+        // Subtle Warm Fill Light
+        const warmLight = new THREE.DirectionalLight(0xfed7aa, 0.6);
+        warmLight.position.set(5, 4, 12);
+        scene.add(warmLight);
+
+        // Ground Reflection Mesh (Glossy Floor Reflection)
+        const mirrorGeo = new THREE.PlaneGeometry(30, 30);
+        const mirrorMat = new THREE.MeshStandardMaterial({
+            color: 0x030712,
+            roughness: 0.15,
+            metalness: 0.8,
+            envMap: envMapTexture,
+            envMapIntensity: 0.8
+        });
+        const mirrorFloor = new THREE.Mesh(mirrorGeo, mirrorMat);
+        mirrorFloor.rotation.x = -Math.PI / 2;
+        mirrorFloor.position.y = -0.45;
+        mirrorFloor.receiveShadow = true;
+        scene.add(mirrorFloor);
+
+        // Floating Dust Particles
+        const particleGeo = new THREE.BufferGeometry();
+        const particleCount = 180;
+        const posArray = new Float32Array(particleCount * 3);
+        for(let i=0; i<particleCount*3; i+=3) {
+            posArray[i] = (Math.random() - 0.5) * 22;
+            posArray[i+1] = Math.random() * 14;
+            posArray[i+2] = (Math.random() - 0.5) * 22;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particleMat = new THREE.PointsMaterial({
+            size: 0.045,
+            color: 0x38bdf8,
+            transparent: true,
+            opacity: 0.5,
+            blending: THREE.AdditiveBlending
+        });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // Grid Constants
+        const GRID_COLS = 3;
+        const GRID_ROWS = 3;
+        const UNIT_SIZE = 2.4;
+        const GAP = 0.05;
+
+        // --- HIGH-GLOSS PBR MATERIALS WITH REAL REFLECTIONS ---
+        const basePlateMat = new THREE.MeshStandardMaterial({
+            color: 0x0f172a, roughness: 0.18, metalness: 0.75, envMap: envMapTexture, envMapIntensity: 1.2
+        });
+        const holeInnerMat = new THREE.MeshStandardMaterial({
+            color: 0x020617, roughness: 0.4, metalness: 0.3
+        });
+        const rimBorderMat = new THREE.MeshStandardMaterial({
+            color: 0x334155, roughness: 0.1, metalness: 0.9, envMap: envMapTexture, envMapIntensity: 1.5
+        });
+
+        const matCyan = new THREE.MeshStandardMaterial({
+            color: 0x0284c7, roughness: 0.08, metalness: 0.35, envMap: envMapTexture, envMapIntensity: 1.8
+        });
+        const matOrange = new THREE.MeshStandardMaterial({
+            color: 0xea580c, roughness: 0.09, metalness: 0.35, envMap: envMapTexture, envMapIntensity: 1.8
+        });
+        const matSlate = new THREE.MeshStandardMaterial({
+            color: 0x475569, roughness: 0.12, metalness: 0.5, envMap: envMapTexture, envMapIntensity: 1.5
+        });
+        const matBlue = new THREE.MeshStandardMaterial({
+            color: 0x2563eb, roughness: 0.08, metalness: 0.35, envMap: envMapTexture, envMapIntensity: 1.8
+        });
+        const matEmerald = new THREE.MeshStandardMaterial({
+            color: 0x059669, roughness: 0.08, metalness: 0.35, envMap: envMapTexture, envMapIntensity: 1.8
+        });
+        const innerFloorMat = new THREE.MeshStandardMaterial({
+            color: 0x050b14, roughness: 0.3, metalness: 0.4
+        });
+
+        // World Groups
+        const worldGroup = new THREE.Group();
+        const gridBaseGroup = new THREE.Group();
+        scene.add(worldGroup);
+        worldGroup.add(gridBaseGroup);
+
+        // 1. Build Baseplate
+        function buildBasePlateWithHoles() {
+            const width = GRID_COLS * UNIT_SIZE + 0.5;
+            const depth = GRID_ROWS * UNIT_SIZE + 0.5;
+            const height = 0.4;
+
+            const baseGeo = new THREE.BoxGeometry(width, height, depth);
+            const baseMesh = new THREE.Mesh(baseGeo, basePlateMat);
+            baseMesh.position.y = -height / 2;
+            baseMesh.receiveShadow = true;
+            gridBaseGroup.add(baseMesh);
+
+            const startX = -((GRID_COLS - 1) * UNIT_SIZE) / 2;
+            const startZ = -((GRID_ROWS - 1) * UNIT_SIZE) / 2;
+
+            const holeSize = UNIT_SIZE - 0.44;
+            const holeDepth = 0.18;
+
+            for (let c = 0; c < GRID_COLS; c++) {
+                for (let r = 0; r < GRID_ROWS; r++) {
+                    const posX = startX + c * UNIT_SIZE;
+                    const posZ = startZ + r * UNIT_SIZE;
+
+                    const holeGeo = new THREE.BoxGeometry(holeSize, holeDepth, holeSize);
+                    const holeMesh = new THREE.Mesh(holeGeo, holeInnerMat);
+                    holeMesh.position.set(posX, -holeDepth / 2 + 0.01, posZ);
+                    holeMesh.receiveShadow = true;
+                    gridBaseGroup.add(holeMesh);
+
+                    const rimGeo = new THREE.BoxGeometry(holeSize + 0.08, 0.02, holeSize + 0.08);
+                    const rimMesh = new THREE.Mesh(rimGeo, rimBorderMat);
+                    rimMesh.position.set(posX, 0.008, posZ);
+                    gridBaseGroup.add(rimMesh);
+                }
+            }
+        }
+        buildBasePlateWithHoles();
+
+        function getCoords(col, row) {
+            const startX = -((GRID_COLS - 1) * UNIT_SIZE) / 2;
+            const startZ = -((GRID_ROWS - 1) * UNIT_SIZE) / 2;
+            return {
+                x: startX + col * UNIT_SIZE,
+                z: startZ + row * UNIT_SIZE
+            };
+        }
+
+        // 2. High-Detail Open Box Mesh Generator
+        function createBox(colSpan = 1, rowSpan = 1, height = 1.3, material = matCyan, divisions = { x: 1, z: 1 }) {
+            const group = new THREE.Group();
+            const w = colSpan * UNIT_SIZE - GAP * 2;
+            const d = rowSpan * UNIT_SIZE - GAP * 2;
+            const wallT = 0.12;
+            const floorT = 0.14;
+
+            const wallFB = new THREE.BoxGeometry(w, height - floorT, wallT);
+            const wallFront = new THREE.Mesh(wallFB, material);
+            wallFront.position.set(0, height / 2 + floorT / 2, d / 2 - wallT / 2);
+            wallFront.castShadow = true;
+            wallFront.receiveShadow = true;
+            group.add(wallFront);
+
+            const wallBack = new THREE.Mesh(wallFB, material);
+            wallBack.position.set(0, height / 2 + floorT / 2, -d / 2 + wallT / 2);
+            wallBack.castShadow = true;
+            wallBack.receiveShadow = true;
+            group.add(wallBack);
+
+            const wallLR = new THREE.BoxGeometry(wallT, height - floorT, d - wallT * 2);
+            const wallLeft = new THREE.Mesh(wallLR, material);
+            wallLeft.position.set(-w / 2 + wallT / 2, height / 2 + floorT / 2, 0);
+            wallLeft.castShadow = true;
+            wallLeft.receiveShadow = true;
+            group.add(wallLeft);
+
+            const wallRight = new THREE.Mesh(wallLR, material);
+            wallRight.position.set(w / 2 - wallT / 2, height / 2 + floorT / 2, 0);
+            wallRight.castShadow = true;
+            wallRight.receiveShadow = true;
+            group.add(wallRight);
+
+            const floorGeo = new THREE.BoxGeometry(w, floorT, d);
+            const floor = new THREE.Mesh(floorGeo, material);
+            floor.position.y = floorT / 2;
+            floor.receiveShadow = true;
+            group.add(floor);
+
+            const innerFloorGeo = new THREE.BoxGeometry(w - wallT * 2, 0.02, d - wallT * 2);
+            const innerFloor = new THREE.Mesh(innerFloorGeo, innerFloorMat);
+            innerFloor.position.y = floorT + 0.01;
+            group.add(innerFloor);
+
+            const innerW = w - wallT * 2;
+            const innerD = d - wallT * 2;
+            const divThick = 0.08;
+
+            if (divisions.x > 1) {
+                const stepX = innerW / divisions.x;
+                for (let i = 1; i < divisions.x; i++) {
+                    const divGeo = new THREE.BoxGeometry(divThick, height - floorT - 0.05, innerD);
+                    const divMesh = new THREE.Mesh(divGeo, material);
+                    divMesh.position.set(-innerW / 2 + i * stepX, (height + floorT) / 2, 0);
+                    divMesh.castShadow = true;
+                    group.add(divMesh);
+                }
+            }
+
+            if (divisions.z > 1) {
+                const stepZ = innerD / divisions.z;
+                for (let j = 1; j < divisions.z; j++) {
+                    const divGeo = new THREE.BoxGeometry(innerW, height - floorT - 0.05, divThick);
+                    const divMesh = new THREE.Mesh(divGeo, material);
+                    divMesh.position.set(0, (height + floorT) / 2, -innerD / 2 + j * stepZ);
+                    divMesh.castShadow = true;
+                    group.add(divMesh);
+                }
+            }
+
+            const pegSize = UNIT_SIZE - 0.48;
+            const pegHeight = 0.15;
+
+            for (let c = 0; c < colSpan; c++) {
+                for (let r = 0; r < rowSpan; r++) {
+                    const pegGeo = new THREE.BoxGeometry(pegSize, pegHeight, pegSize);
+                    const peg = new THREE.Mesh(pegGeo, material);
+                    const offsetX = (c - (colSpan - 1) / 2) * UNIT_SIZE;
+                    const offsetZ = (r - (rowSpan - 1) / 2) * UNIT_SIZE;
+                    peg.position.set(offsetX, -pegHeight / 2, offsetZ);
+                    peg.castShadow = true;
+                    group.add(peg);
+                }
+            }
+
+            return group;
+        }
+
+        // ==========================================
+        // MODULE CONFIGURATION
+        // ==========================================
+        const boxesConfig = [
+            {
+                id: 1, col: 0.5, row: 0.5, spanX: 2, spanZ: 2, h: 1.3,
+                mat: matCyan, div: { x: 2, z: 2 },
+                targetPos: getCoords(0.5, 0.5), startPosY: 9.0
+            },
+            {
+                id: 2, col: 2, row: 0.5, spanX: 1, spanZ: 2, h: 1.4,
+                mat: matOrange, div: { x: 1, z: 2 },
+                targetPos: getCoords(2, 0.5), startPosY: 9.5
+            },
+            {
+                id: 3, col: 0, row: 2, spanX: 1, spanZ: 1, h: 1.2,
+                mat: matSlate, div: { x: 1, z: 1 },
+                targetPos: getCoords(0, 2), startPosY: 8.5
+            },
+            {
+                id: 4, col: 1, row: 2, spanX: 1, spanZ: 1, h: 1.3,
+                mat: matBlue, div: { x: 2, z: 1 },
+                targetPos: getCoords(1, 2), startPosY: 10.0
+            },
+            {
+                id: 5, col: 2, row: 2, spanX: 1, spanZ: 1, h: 1.2,
+                mat: matEmerald, div: { x: 1, z: 1 },
+                targetPos: getCoords(2, 2), startPosY: 10.5
+            }
+        ];
+
+        const boxObjects = [];
+
+        boxesConfig.forEach((cfg) => {
+            const mesh = createBox(cfg.spanX, cfg.spanZ, cfg.h, cfg.mat, cfg.div);
+            mesh.position.set(cfg.targetPos.x, cfg.startPosY, cfg.targetPos.z);
+            worldGroup.add(mesh);
+
+            boxObjects.push({
+                mesh: mesh,
+                config: cfg,
+                state: { y: cfg.startPosY }
+            });
+        });
+
+        // ==========================================
+        // GSAP SCROLL ANIMATION
+        // ==========================================
+        const statusText = document.getElementById('status-text');
+        const statusDot = document.getElementById('status-dot');
+
+        const mainTimeline = gsap.timeline({
+            scrollTrigger: {
+                trigger: "#animation-section",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 0.4,
+                onUpdate: (self) => {
+                    const prog = self.progress;
+                    if (prog < 0.05) {
+                        statusText.innerText = "Das Gitter ist noch komplett frei...";
+                        statusDot.className = "w-3 h-3 rounded-full bg-slate-500";
+                    } else if (prog < 0.22) {
+                        statusText.innerText = "Modul 1 (2x2 Cyan) senkt sich waagerecht ab...";
+                        statusDot.className = "w-3 h-3 rounded-full bg-cyan-400 animate-pulse shadow-lg shadow-cyan-500/50";
+                    } else if (prog < 0.42) {
+                        statusText.innerText = "Modul 2 (1x2 Orange) gleitet senkrecht nach unten...";
+                        statusDot.className = "w-3 h-3 rounded-full bg-orange-400 animate-pulse shadow-lg shadow-orange-500/50";
+                    } else if (prog < 0.62) {
+                        statusText.innerText = "Modul 3 (1x1 Slate) rastet in den Sockel ein...";
+                        statusDot.className = "w-3 h-3 rounded-full bg-slate-300 animate-pulse";
+                    } else if (prog < 0.82) {
+                        statusText.innerText = "Modul 4 (1x1 Blau) klinkt sich spielfrei ein...";
+                        statusDot.className = "w-3 h-3 rounded-full bg-blue-400 animate-pulse shadow-lg shadow-blue-500/50";
+                    } else if (prog < 0.96) {
+                        statusText.innerText = "Modul 5 (1x1 Smaragd) vervollständigt das Raster...";
+                        statusDot.className = "w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50";
+                    } else {
+                        statusText.innerText = "100% Ausgefüllt & Eingerastet! Weiter scrollen.";
+                        statusDot.className = "w-3 h-3 rounded-full bg-emerald-400 shadow-lg shadow-emerald-500/50";
+                    }
+                }
+            }
+        });
+
+        boxObjects.forEach((item) => {
+            const st = item.state;
+            mainTimeline.to(st, {
+                y: 0.0,
+                duration: 1.0,
+                ease: "power2.inOut"
+            });
+            mainTimeline.to(st, {
+                y: -0.015,
+                duration: 0.12,
+                ease: "bounce.out"
+            });
+        });
+
+        // Mouse Parallax Interaction
+        let mouseX = 0, mouseY = 0;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 0.8;
+            mouseY = (e.clientY / window.innerHeight - 0.5) * 0.8;
+        });
+
+        // ==========================================
+        // RENDER LOOP WITH DYNAMIC GLOSS & LIGHT MOVEMENTS
+        // ==========================================
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+
+            boxObjects.forEach(item => {
+                item.mesh.position.y = item.state.y;
+            });
+
+            const positions = particleGeo.attributes.position.array;
+            for (let i = 1; i < particleCount * 3; i += 3) {
+                positions[i] -= 0.004;
+                if (positions[i] < 0) positions[i] = 14;
+            }
+            particleGeo.attributes.position.needsUpdate = true;
+
+            // Smooth Camera Inertia / Parallax
+            camera.position.x += (baseCamPos.x + mouseX * 2.5 - camera.position.x) * 0.05;
+            camera.position.y += (baseCamPos.y - mouseY * 2.5 - camera.position.y) * 0.05;
+            camera.lookAt(0, -0.4, 0);
+
+            // Subtle Light Motion for Dynamic Reflections
+            rimLight.position.x = -15 + Math.sin(time * 0.5) * 2;
+            keyLight.position.z = 9 + Math.cos(time * 0.3) * 1.5;
+
+            gridBaseGroup.rotation.y = Math.sin(time * 0.1) * 0.015;
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            ScrollTrigger.refresh();
+        });
+
+        window.onload = function() {
+            animate();
+            setTimeout(() => ScrollTrigger.refresh(), 200);
+        };
+    </script>
+</body>
+</html>
