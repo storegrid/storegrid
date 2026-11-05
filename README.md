@@ -1,1 +1,1 @@
-# StoreGrid.de
+# storegrid
