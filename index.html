@@ -53,7 +53,7 @@
         }
         ::-webkit-scrollbar-thumb {
             background: #1e293b;
-            border-radius: 4px;
+            border-radius: 5px;
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #38bdf8;
@@ -77,6 +77,107 @@
             pointer-events: none;
             z-index: 0;
         }
+
+        /* Navigation blendet sich beim Erreichen der Galerie weich aus. */
+        #site-navigation {
+            transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
+        }
+        #site-navigation.nav-hidden {
+            transform: translateY(-110%);
+        }
+
+        /* Rahmenloses X: ausschließlich zwei weiße Linien. */
+        #close-image-modal {
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            border: 0;
+            outline: none;
+            box-shadow: none;
+            background: transparent;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        #close-image-modal::before,
+        #close-image-modal::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 34px;
+            height: 2px;
+            background: #fff;
+            border-radius: 2px;
+            transform-origin: center;
+            transition: background-color 180ms ease, width 180ms ease;
+        }
+        #close-image-modal::before { transform: translate(-50%, -50%) rotate(45deg); }
+        #close-image-modal::after { transform: translate(-50%, -50%) rotate(-45deg); }
+        #close-image-modal:hover::before,
+        #close-image-modal:hover::after { background: #67e8f9; width: 38px; }
+        #close-image-modal:focus,
+        #close-image-modal:focus-visible {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .feature-card {
+            cursor: zoom-in;
+            transform-origin: center;
+        }
+        .feature-card:focus-visible {
+            outline: 2px solid rgba(34, 211, 238, .85);
+            outline-offset: 5px;
+        }
+        #feature-zoom-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 90;
+            background: rgba(0, 0, 0, .78);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 380ms ease, visibility 380ms ease;
+        }
+        #feature-zoom-overlay.is-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .feature-zoom-clone,
+        .gallery-zoom-clone {
+            position: fixed !important;
+            z-index: 101 !important;
+            margin: 0 !important;
+            transform-origin: top left;
+            transition:
+                transform 720ms cubic-bezier(.16, 1, .3, 1),
+                box-shadow 720ms cubic-bezier(.16, 1, .3, 1),
+                border-radius 720ms cubic-bezier(.16, 1, .3, 1);
+            will-change: transform;
+            backface-visibility: hidden;
+            transform: translate3d(0, 0, 0) scale(1);
+            box-shadow: 0 28px 100px rgba(0, 0, 0, .55);
+        }
+        .feature-zoom-clone {
+            z-index: 91 !important;
+            cursor: zoom-out !important;
+        }
+        .gallery-zoom-clone {
+            z-index: 101 !important;
+            object-fit: contain !important;
+            background: #000;
+            cursor: zoom-out !important;
+            border-radius: 5px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #site-navigation, #feature-zoom-overlay,
+            .feature-zoom-clone, #close-image-modal::before,
+            #close-image-modal::after {
+                transition-duration: 1ms !important;
+            }
+        }
+
     </style>
 </head>
 <body class="bg-[#050b1f] text-gray-100 antialiased selection:bg-cyan-500 selection:text-white">
@@ -85,7 +186,7 @@
     <div class="glow-effect"></div>
 
     <!-- Navigation Header -->
-    <nav class="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-slate-800/80 px-8 py-4">
+    <nav id="site-navigation" class="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-slate-800/80 px-8 py-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <img src="favicon.ico" alt="StoreGrid Logo" class="w-10 h-10 rounded-xl object-contain" width="40" height="40">
@@ -121,6 +222,13 @@
     <!-- PRODUKTBESCHREIBUNG -->
     <section id="description" class="relative z-20 bg-[#050b1f] py-32 px-6 border-t border-slate-800/80">
         <div class="max-w-6xl mx-auto">
+            <!-- BILDERGALERIE: Lege bild1.png bis bild4.png neben diese HTML-Datei. -->
+            <div id="product-gallery" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-20">
+                <img src="bild1.png" alt="Bild 1" class="gallery-image w-full aspect-video object-cover rounded-[5px] border border-white/10 cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]">
+                <img src="bild2.png" alt="Bild 2" class="gallery-image w-full aspect-video object-cover rounded-[5px] border border-white/10 cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]">
+                <img src="bild3.png" alt="Bild 3" class="gallery-image w-full aspect-video object-cover rounded-[5px] border border-white/10 cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]">
+                <img src="bild4.png" alt="Bild 4" class="gallery-image w-full aspect-video object-cover rounded-[5px] border border-white/10 cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]">
+            </div>
             <div class="text-center max-w-3xl mx-auto mb-20">
                 <h2 class="text-4xl sm:text-6xl font-black tracking-tight mb-6 text-white">
                     Perfekte Anordnung - Ohne Rutschen
@@ -130,8 +238,10 @@
                 </p>
             </div>
 
+
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="glass-panel p-10 rounded-3xl hover:border-cyan-500/60 transition-all duration-500 hover:-translate-y-2 group">
+                <div class="feature-card glass-panel p-10 rounded-3xl hover:border-cyan-500/60 transition-all duration-500 hover:-translate-y-2 group" role="button" tabindex="0" aria-label="Eigenschaft vergrößern">
                     <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
                         <i data-lucide="grid" class="w-7 h-7"></i>
                     </div>
@@ -141,7 +251,7 @@
                     </p>
                 </div>
 
-                <div class="glass-panel p-10 rounded-3xl hover:border-cyan-500/60 transition-all duration-500 hover:-translate-y-2 group">
+                <div class="feature-card glass-panel p-10 rounded-3xl hover:border-cyan-500/60 transition-all duration-500 hover:-translate-y-2 group" role="button" tabindex="0" aria-label="Eigenschaft vergrößern">
                     <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
                         <i data-lucide="columns" class="w-7 h-7"></i>
                     </div>
@@ -151,7 +261,7 @@
                     </p>
                 </div>
 
-                <div class="glass-panel p-10 rounded-3xl hover:border-cyan-500/60 transition-all duration-500 hover:-translate-y-2 group">
+                <div class="feature-card glass-panel p-10 rounded-3xl hover:border-cyan-500/60 transition-all duration-500 hover:-translate-y-2 group" role="button" tabindex="0" aria-label="Eigenschaft vergrößern">
                     <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
                         <i data-lucide="check-circle-2" class="w-7 h-7"></i>
                     </div>
@@ -164,6 +274,17 @@
         </div>
     </section>
 
+    <!-- Vollbild-Ansicht für die Galerie -->
+    <div id="image-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/90 p-4 opacity-0 transition-opacity duration-500 ease-in-out"
+         role="dialog" aria-modal="true" aria-label="Bild vergrößert">
+        <button id="close-image-modal" type="button" aria-label="Bild schließen"
+                class="absolute top-5 right-6 z-[110]" style="position:absolute;">
+        </button>
+    </div>
+
+    <!-- Overlay für die vergrößerten Eigenschaftsboxen -->
+    <div id="feature-zoom-overlay" aria-hidden="true"></div>
+
     <!-- Footer -->
     <footer class="bg-[#030817] py-10 border-t border-slate-900 text-center text-xs text-slate-500 font-medium tracking-wider">
         <p>© <span id="year"></span> StoreGrid System. Alle Rechte vorbehalten.</p>
@@ -173,6 +294,219 @@
     <script>
         lucide.createIcons();
         document.getElementById('year').innerText = new Date().getFullYear();
+
+        // Galerie: dieselbe FLIP-Vergrößerung wie bei den Eigenschaftsboxen.
+        const imageModal = document.getElementById('image-modal');
+        const closeImageModal = document.getElementById('close-image-modal');
+        let activeGalleryImage = null;
+        let galleryClone = null;
+        let galleryClosing = false;
+        let galleryPreviousOverflow = '';
+
+        function openGalleryZoom(image) {
+            if (activeGalleryImage || activeFeature) return;
+
+            const rect = image.getBoundingClientRect();
+            const clone = image.cloneNode(true);
+            clone.removeAttribute('id');
+            clone.classList.remove('gallery-image', 'hover:scale-[1.02]');
+            clone.classList.add('gallery-zoom-clone');
+            clone.alt = image.alt;
+            clone.style.left = `${rect.left}px`;
+            clone.style.top = `${rect.top}px`;
+            clone.style.width = `${rect.width}px`;
+            clone.style.height = `${rect.height}px`;
+            clone.style.transform = 'scale(1)';
+            clone.style.pointerEvents = 'auto';
+
+            activeGalleryImage = image;
+            galleryClone = clone;
+            galleryPreviousOverflow = document.body.style.overflow;
+            image.style.visibility = 'hidden';
+            document.body.style.overflow = 'hidden';
+            imageModal.classList.remove('hidden');
+            imageModal.classList.add('flex');
+            document.body.appendChild(clone);
+
+            // Gleiche FLIP-Animation wie bei den Eigenschaftsboxen:
+            // Position bleibt am Original verankert, die Skalierung fährt
+            // weich in die größtmögliche Vollbilddarstellung.
+            const scale = Math.min(
+                window.innerWidth / rect.width,
+                window.innerHeight / rect.height
+            );
+            const targetLeft = (window.innerWidth - rect.width * scale) / 2;
+            const targetTop = (window.innerHeight - rect.height * scale) / 2;
+
+            requestAnimationFrame(() => {
+                imageModal.classList.remove('opacity-0');
+                imageModal.classList.add('opacity-100');
+                clone.style.transform = `translate3d(${targetLeft - rect.left}px, ${targetTop - rect.top}px, 0) scale(${scale})`;
+                clone.style.borderRadius = '5px';
+            });
+
+            clone.addEventListener('click', closeGalleryZoom);
+            closeImageModal.focus();
+        }
+
+        function closeGalleryZoom() {
+            if (!activeGalleryImage || !galleryClone || galleryClosing) return;
+            galleryClosing = true;
+
+            const image = activeGalleryImage;
+            const clone = galleryClone;
+            const rect = image.getBoundingClientRect();
+
+            clone.style.transform = 'translate3d(0, 0, 0) scale(1)';
+            clone.style.borderRadius = '5px';
+            imageModal.classList.remove('opacity-100');
+            imageModal.classList.add('opacity-0');
+
+            const finish = () => {
+                if (clone.parentNode) clone.remove();
+                image.style.visibility = '';
+                imageModal.classList.add('hidden');
+                imageModal.classList.remove('flex');
+                document.body.style.overflow = galleryPreviousOverflow;
+                activeGalleryImage = null;
+                galleryClone = null;
+                galleryClosing = false;
+            };
+
+            clone.addEventListener('transitionend', (event) => {
+                if (event.propertyName === 'transform') finish();
+            }, { once: true });
+            window.setTimeout(finish, 750);
+        }
+
+        document.querySelectorAll('.gallery-image').forEach((image) => {
+            image.addEventListener('click', () => openGalleryZoom(image));
+            image.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openGalleryZoom(image);
+                }
+            });
+            image.setAttribute('tabindex', '0');
+            image.setAttribute('role', 'button');
+            image.setAttribute('aria-label', `${image.alt} vergrößern`);
+        });
+
+        closeImageModal.addEventListener('click', closeGalleryZoom);
+        imageModal.addEventListener('click', (event) => {
+            if (event.target === imageModal) closeGalleryZoom();
+        });
+
+        // Eigenschaftsboxen: FLIP-ähnliche Vergrößerung aus der Originalposition.
+        const featureOverlay = document.getElementById('feature-zoom-overlay');
+        const featureCards = Array.from(document.querySelectorAll('.feature-card'));
+        let activeFeature = null;
+        let featureClone = null;
+        let featureClosing = false;
+        let previousBodyOverflow = '';
+
+        function openFeatureZoom(card) {
+            if (activeFeature || !imageModal.classList.contains('hidden')) return;
+
+            const rect = card.getBoundingClientRect();
+            const clone = card.cloneNode(true);
+            clone.removeAttribute('role');
+            clone.removeAttribute('tabindex');
+            clone.setAttribute('aria-hidden', 'true');
+            clone.classList.add('feature-zoom-clone');
+            // Keine geerbten Hover-Transforms während des Zooms.
+            clone.classList.remove('hover:-translate-y-2', 'transition-all', 'duration-500');
+            clone.querySelectorAll('.group-hover\\:scale-110').forEach((element) => {
+                element.classList.remove('group-hover:scale-110');
+            });
+            clone.style.left = `${rect.left}px`;
+            clone.style.top = `${rect.top}px`;
+            clone.style.width = `${rect.width}px`;
+            clone.style.height = `${rect.height}px`;
+            clone.style.transform = 'scale(1)';
+            clone.style.pointerEvents = 'auto';
+
+            activeFeature = card;
+            featureClone = clone;
+            previousBodyOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            card.style.visibility = 'hidden';
+            featureOverlay.classList.add('is-visible');
+            document.body.appendChild(clone);
+
+            const scale = Math.min(
+                2.35,
+                (window.innerWidth * 0.88) / rect.width,
+                (window.innerHeight * 0.78) / rect.height
+            );
+            // Position the scaled clone so its visual center is exactly the viewport center.
+            const targetLeft = (window.innerWidth - rect.width * scale) / 2;
+            const targetTop = (window.innerHeight - rect.height * scale) / 2;
+
+            requestAnimationFrame(() => {
+                clone.style.transform = `translate3d(${targetLeft - rect.left}px, ${targetTop - rect.top}px, 0) scale(${scale})`;
+            });
+
+            clone.addEventListener('click', closeFeatureZoom, { once: true });
+        }
+
+        function closeFeatureZoom() {
+            if (!activeFeature || !featureClone || featureClosing) return;
+            featureClosing = true;
+
+            const card = activeFeature;
+            const clone = featureClone;
+            const rect = card.getBoundingClientRect();
+
+            clone.style.transform = 'translate3d(0, 0, 0) scale(1)';
+            featureOverlay.classList.remove('is-visible');
+
+            const finish = () => {
+                if (clone.parentNode) clone.remove();
+                card.style.visibility = '';
+                document.body.style.overflow = previousBodyOverflow;
+                activeFeature = null;
+                featureClone = null;
+                featureClosing = false;
+            };
+            clone.addEventListener('transitionend', (event) => {
+                if (event.propertyName === 'transform') finish();
+            }, { once: true });
+            window.setTimeout(finish, 750);
+        }
+
+        featureCards.forEach((card) => {
+            card.addEventListener('click', () => openFeatureZoom(card));
+            card.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openFeatureZoom(card);
+                }
+            });
+        });
+        featureOverlay.addEventListener('click', closeFeatureZoom);
+
+        // Navigation ausblenden, sobald die Galerie in den Viewport gelangt.
+        const navigation = document.getElementById('site-navigation');
+        const gallery = document.getElementById('product-gallery');
+        if ('IntersectionObserver' in window && navigation && gallery) {
+            const galleryObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    navigation.classList.toggle('nav-hidden', entry.isIntersecting);
+                });
+            }, { threshold: 0.01 });
+            galleryObserver.observe(gallery);
+        }
+
+        // Escape schließt die aktuell geöffnete Ansicht.
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            if (activeGalleryImage) {
+                closeGalleryZoom();
+            } else if (activeFeature) {
+                closeFeatureZoom();
+            }
+        });
 
         gsap.registerPlugin(ScrollTrigger);
 
